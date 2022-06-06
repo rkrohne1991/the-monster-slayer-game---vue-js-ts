@@ -17,7 +17,9 @@
     </section>
     <section id="controls">
       <button @click="attackMonster">ATTACK</button>
-      <button>SPECIAL ATTACK</button>
+      <button :disabled="mayUseSpecialAttack" @click="specialAttackMonster">
+        SPECIAL ATTACK
+      </button>
       <button>HEAL</button>
       <button>SURRENDER</button>
     </section>
@@ -40,7 +42,7 @@ const getRandomValue = (min: number, max: number) =>
 
 export default defineComponent({
   data() {
-    return { playerHealth: 100, monsterHealth: 100 };
+    return { currentRound: 0, playerHealth: 100, monsterHealth: 100 };
   },
   computed: {
     monsterBarStyles() {
@@ -51,9 +53,14 @@ export default defineComponent({
       const health = this.playerHealth as number;
       return { width: health + '%' };
     },
+    mayUseSpecialAttack() {
+      const theCurrentRound = this.currentRound as number;
+      return theCurrentRound % 3 !== 0;
+    },
   },
   methods: {
     attackMonster() {
+      this.currentRound++;
       const attackValue = getRandomValue(5, 12);
       this.monsterHealth -= attackValue;
       this.attackPlayer();
@@ -61,6 +68,12 @@ export default defineComponent({
     attackPlayer() {
       const attackValue = getRandomValue(8, 15);
       this.playerHealth -= attackValue;
+    },
+    specialAttackMonster() {
+      this.currentRound++;
+      const attackValue = getRandomValue(10, 25);
+      this.monsterHealth -= attackValue;
+      this.attackPlayer();
     },
   },
 });

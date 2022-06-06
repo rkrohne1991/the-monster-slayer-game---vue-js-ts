@@ -6,17 +6,17 @@
     <section id="monster" class="container">
       <h2>Monster Health</h2>
       <div class="healthbar">
-        <div class="healthbar__value"></div>
+        <div class="healthbar__value" :style="monsterBarStyles"></div>
       </div>
     </section>
     <section id="player" class="container">
       <h2>Your Health</h2>
       <div class="healthbar">
-        <div class="healthbar__value"></div>
+        <div class="healthbar__value" :style="playerBarStyles"></div>
       </div>
     </section>
     <section id="controls">
-      <button>ATTACK</button>
+      <button @click="attackMonster">ATTACK</button>
       <button>SPECIAL ATTACK</button>
       <button>HEAL</button>
       <button>SURRENDER</button>
@@ -41,6 +41,16 @@ const getRandomValue = (min: number, max: number) =>
 export default defineComponent({
   data() {
     return { playerHealth: 100, monsterHealth: 100 };
+  },
+  computed: {
+    monsterBarStyles() {
+      const health = this.monsterHealth as number;
+      return { width: health + '%' };
+    },
+    playerBarStyles() {
+      const health = this.playerHealth as number;
+      return { width: health + '%' };
+    },
   },
   methods: {
     attackMonster() {

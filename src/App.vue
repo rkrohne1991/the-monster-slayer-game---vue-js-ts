@@ -15,13 +15,20 @@
         <div class="healthbar__value" :style="playerBarStyles"></div>
       </div>
     </section>
-    <section id="controls">
+    <div class="container" v-if="winner">
+      <h2>Game Over!</h2>
+      <h3 v-if="winner === 'monster'">You lost!</h3>
+      <h3 v-else-if="winner === 'player'">You won!</h3>
+      <h3 v-else>It's a draw!</h3>
+      <button @click="startGame">Start New Game</button>
+    </div>
+    <section id="controls" v-else>
       <button @click="attackMonster">ATTACK</button>
       <button :disabled="mayUseSpecialAttack" @click="specialAttackMonster">
         SPECIAL ATTACK
       </button>
       <button @click="healPlayer">HEAL</button>
-      <button>SURRENDER</button>
+      <button @click="surrender">SURRENDER</button>
     </section>
     <section id="log" class="container">
       <h2>Battle Log</h2>
@@ -40,17 +47,35 @@ import { defineComponent } from 'vue';
 const getRandomValue = (min: number, max: number) =>
   Math.floor(Math.random() * (max - min)) + min;
 
+interface DataType {
+  currentRound: number;
+  playerHealth: number;
+  monsterHealth: number;
+  winner: null | string;
+}
+
 export default defineComponent({
-  data() {
-    return { currentRound: 0, playerHealth: 100, monsterHealth: 100 };
+  data(): DataType {
+    return {
+      currentRound: 0,
+      playerHealth: 100,
+      monsterHealth: 100,
+      winner: null,
+    };
   },
   computed: {
     monsterBarStyles() {
       const health = this.monsterHealth as number;
+      if (health < 0) {
+        return { width: '0%' };
+      }
       return { width: health + '%' };
     },
     playerBarStyles() {
       const health = this.playerHealth as number;
+      if (health < 0) {
+        return { width: '0%' };
+      }
       return { width: health + '%' };
     },
     mayUseSpecialAttack() {
@@ -58,7 +83,33 @@ export default defineComponent({
       return theCurrentRound % 3 !== 0;
     },
   },
+  watch: {
+    playerHealth(value: number) {
+      if (value <= 0 && this.monsterHealth <= 0) {
+        // A draw
+        this.winner = 'draw';
+      } else if (value <= 0) {
+        // Player lost
+        this.winner = 'monster';
+      }
+    },
+    monsterHealth(value: number) {
+      if (value <= 0 && this.playerHealth <= 0) {
+        // A draw
+        this.winner = 'draw';
+      } else if (value <= 0) {
+        // Monster lost
+        this.winner = 'player';
+      }
+    },
+  },
   methods: {
+    startGame() {
+      this.playerHealth = 100;
+      this.monsterHealth = 100;
+      this.winner = null;
+      this.currentRound = 0;
+    },
     attackMonster() {
       this.currentRound++;
       const attackValue = getRandomValue(5, 12);
@@ -84,6 +135,9 @@ export default defineComponent({
         this.playerHealth += healValue;
       }
       this.attackPlayer();
+    },
+    surrender() {
+      this.winner = 'monster';
     },
   },
 });

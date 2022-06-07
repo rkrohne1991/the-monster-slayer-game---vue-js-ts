@@ -32,7 +32,27 @@
     </section>
     <section id="log" class="container">
       <h2>Battle Log</h2>
-      <ul></ul>
+      <ul>
+        <li v-for="(logMessage, index) in logMessages" :key="index">
+          <span
+            :class="{
+              'log--player': logMessage.actionBy === 'player',
+              'log--monster': logMessage.actionBy === 'monster',
+            }"
+            >{{ logMessage.actionBy === 'player' ? 'Player' : 'Monster' }}</span
+          >
+
+          <span v-if="logMessage.actionType === 'heal'">
+            heals himself for
+            <span class="log--heal">{{ logMessage.actionValue }}</span></span
+          >
+
+          <span v-else>
+            attacks and deals
+            <span class="log--damage">{{ logMessage.actionValue }}</span></span
+          >
+        </li>
+      </ul>
     </section>
   </div>
 </template>
@@ -47,11 +67,18 @@ import { defineComponent } from 'vue';
 const getRandomValue = (min: number, max: number) =>
   Math.floor(Math.random() * (max - min)) + min;
 
+interface LogMessages {
+  actionBy: string;
+  actionType: string;
+  actionValue: number;
+}
+
 interface DataType {
   currentRound: number;
   playerHealth: number;
   monsterHealth: number;
   winner: null | string;
+  logMessages: LogMessages[];
 }
 
 export default defineComponent({
@@ -61,6 +88,7 @@ export default defineComponent({
       playerHealth: 100,
       monsterHealth: 100,
       winner: null,
+      logMessages: [],
     };
   },
   computed: {
@@ -109,21 +137,25 @@ export default defineComponent({
       this.monsterHealth = 100;
       this.winner = null;
       this.currentRound = 0;
+      this.logMessages = [];
     },
     attackMonster() {
       this.currentRound++;
       const attackValue = getRandomValue(5, 12);
       this.monsterHealth -= attackValue;
+      this.addLogMessage('player', 'attack', attackValue);
       this.attackPlayer();
     },
     attackPlayer() {
       const attackValue = getRandomValue(8, 15);
       this.playerHealth -= attackValue;
+      this.addLogMessage('monster', 'attack', attackValue);
     },
     specialAttackMonster() {
       this.currentRound++;
       const attackValue = getRandomValue(10, 25);
       this.monsterHealth -= attackValue;
+      this.addLogMessage('player', 'special-attack', attackValue);
       this.attackPlayer();
     },
     healPlayer() {
@@ -134,10 +166,18 @@ export default defineComponent({
       } else {
         this.playerHealth += healValue;
       }
+      this.addLogMessage('player', 'heal', healValue);
       this.attackPlayer();
     },
     surrender() {
       this.winner = 'monster';
+    },
+    addLogMessage(who: string, what: string, value: number) {
+      this.logMessages.unshift({
+        actionBy: who,
+        actionType: what,
+        actionValue: value,
+      });
     },
   },
 });
